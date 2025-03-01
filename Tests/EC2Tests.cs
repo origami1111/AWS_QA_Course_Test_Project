@@ -23,7 +23,7 @@ namespace AWS_QA_Course_Test_Project.Tests
         }
 
         [Test(Description = "CXQA-EC2-01: Check that private application instance deployed")]
-        public async Task TestPrivateInstanceInstances()
+        public async Task TestHasPrivateInstance()
         {
             string expectedInstance = "private";
             var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
