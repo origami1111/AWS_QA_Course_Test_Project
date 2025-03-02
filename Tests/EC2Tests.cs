@@ -91,15 +91,26 @@ namespace AWS_QA_Course_Test_Project.Tests
 
             using (HttpClient client = new HttpClient())
             {
-                HttpResponseMessage response = await client.GetAsync(apiUrl);
-                response.EnsureSuccessStatusCode();
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(apiUrl);
+                    response.EnsureSuccessStatusCode();
 
-                string responseBody = await response.Content.ReadAsStringAsync();
-                var apiResponse = JsonConvert.DeserializeObject<ApiResponse>(responseBody);
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    var apiResponse = JsonConvert.DeserializeObject<ApiResponse>(responseBody);
 
-                Assert.That(apiResponse.AvailabilityZone, Is.EqualTo(expectedAvailabilityZone), "Availability zone does not match.");
-                Assert.That(apiResponse.PrivateIpv4, Is.EqualTo(expectedPrivateIpv4), "Private IPv4 does not match.");
-                Assert.That(apiResponse.Region, Is.EqualTo(expectedRegion), "Region does not match.");
+                    Assert.That(apiResponse.AvailabilityZone, Is.EqualTo(expectedAvailabilityZone), "Availability zone does not match.");
+                    Assert.That(apiResponse.PrivateIpv4, Is.EqualTo(expectedPrivateIpv4), "Private IPv4 does not match.");
+                    Assert.That(apiResponse.Region, Is.EqualTo(expectedRegion), "Region does not match.");
+                }
+                catch (HttpRequestException e)
+                {
+                    Assert.Fail($"API request to {apiUrl} failed: {e.Message}");
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail($"An unexpected error occurred: {e.Message}");
+                }
             }
         }
 
