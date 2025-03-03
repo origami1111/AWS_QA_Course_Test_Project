@@ -29,7 +29,7 @@ To run the tests and generate a test report, follow these steps:
 
 ## Test Report
 
-You can fin the test report in the '\CloudX Associate AWS for Testers\My project\AWS_QA_Course_Test_Project\bin\Debug\net8.0\TestResults' directory.
+You can fin the test report in the '\AWS_QA_Course_Test_Project\bin\Debug\net8.0\TestResults' directory.
 
 ## Project Structure
 
