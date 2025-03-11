@@ -1,6 +1,8 @@
 ﻿using Amazon.S3;
 using AWS_QA_Course_Test_Project.Base;
+using AWS_QA_Course_Test_Project.Clients;
 using AWS_QA_Course_Test_Project.Utils;
+using System.Net;
 
 namespace AWS_QA_Course_Test_Project.Tests
 {
@@ -125,68 +127,151 @@ namespace AWS_QA_Course_Test_Project.Tests
         }
 
         // Application functional validation
-        [Test(Description = "CXQA-S3-03: Upload images to the S3 bucket"), Order(9)]
+        string filePath = "C:\\Users\\origami\\Desktop\\CloudX Associate AWS for Testers\\AWS_QA_Course_Test_Project\\Images\\image0.jpg";
+        string imageName = "image0.jpg";
+
+        [Test(Description = "CXQA-S3-03: Upload image to the S3 bucket")]
+        public async Task TestUploadImageToS3Bucket()
+        {
+            var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
+            var publicInstance = EC2Helper.GetPublicInstance(instances);
+            string publicIpAddress = publicInstance.PublicIpAddress;
+
+            var restClient = new RestClient(publicIpAddress);
+
+            // Upload the image
+            var postImageResponse = await restClient.PostImageAsync(filePath);
+
+            // Get image response
+            var getImageResponse = await restClient.GetImageMetadataAsync(postImageResponse.Id);
+
+            // Assert the response
+            Assert.That(getImageResponse.Id, Is.EqualTo(postImageResponse.Id), "Image was not posted, the ids are different");
+            Assert.That(getImageResponse.ObjectKey, Does.Contain(imageName), "Image was not posted, the object_key`s are different");
+
+            // Delete the image
+            await restClient.DeleteImageAsync(postImageResponse.Id);
+        }
+
+        string filePathTemplate = "C:\\Users\\origami\\Desktop\\CloudX Associate AWS for Testers\\AWS_QA_Course_Test_Project\\Images\\image{0}.jpg";
+        string imageNameTemplate = "image{0}.jpg";
+
+        [Test(Description = "CXQA-S3-03: Upload images to the S3 bucket")]
         public async Task TestUploadImagesToS3Bucket()
         {
-            try
-            {
-                string bucketName = await S3Helper.GetS3BucketName(S3Client);
-                string key = "image.jpg";
-                string filePath = "C:\\Users\\origami\\Desktop\\CloudX Associate AWS for Testers\\AWS_QA_Course_Test_Project\\Images\\image.jpg"; // just for testing purposes
+            var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
+            var publicInstance = EC2Helper.GetPublicInstance(instances);
+            string publicIpAddress = publicInstance.PublicIpAddress;
+            int countOfImages = 3;
+            Dictionary<string, string> createdImages = new Dictionary<string, string>();
 
-                await S3Helper.UploadImageToS3Bucket(S3Client, bucketName, key, filePath);
-            }
-            catch (AmazonS3Exception ex)
+            var restClient = new RestClient(publicIpAddress);
+
+            for (int i = 0; i < countOfImages; i++)
             {
-                Assert.Fail($"Failed to upload images to the S3 bucket: {ex.Message}");
+                string filePath = string.Format(filePathTemplate, i);
+                string imageName = string.Format(imageNameTemplate, i);
+
+                var postImageResponse = await restClient.PostImageAsync(filePath);
+                var getImageResponse = await restClient.GetImageMetadataAsync(postImageResponse.Id);
+                createdImages.Add(postImageResponse.Id, getImageResponse.ObjectKey);
+
+                // Assert the response
+                Assert.That(getImageResponse.Id, Is.EqualTo(postImageResponse.Id), $"Image {i} was not posted, the ids are different");
+                Assert.That(getImageResponse.ObjectKey, Does.Contain(imageName), $"Image {i} was not posted, the object_key`s are different");
+            }
+
+            var getImagesResponse = await restClient.GetImagesAsync();
+
+            Assert.That(getImagesResponse.Count, Is.GreaterThanOrEqualTo(countOfImages), "Not all images were uploaded");
+            Assert.That(createdImages.Keys.All(id => getImagesResponse.Any(img => img.Id == id)), Is.True, "Not all images were uploaded");
+
+            foreach (var createdImage in createdImages)
+            {
+                await restClient.DeleteImageAsync(createdImage.Key);
             }
         }
 
-        [Test(Description = "CXQA-S3-04: Download images from the S3 bucket"), Order(10)]
+        [Test(Description = "CXQA-S3-04: Download images from the S3 bucket")]
         public async Task TestDownloadImagesFromS3Bucket()
         {
-            try
-            {
-                string bucketName = await S3Helper.GetS3BucketName(S3Client);
-                string key = "image.jpg";
-                string filePath = "DownloadedImages/image.jpg";
+            var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
+            var publicInstance = EC2Helper.GetPublicInstance(instances);
+            string publicIpAddress = publicInstance.PublicIpAddress;
+            string downloadPath = "DownloadedImages/image.jpg";
 
-                await S3Helper.DownloadImageFromS3Bucket(S3Client, bucketName, key, filePath);
-            }
-            catch (AmazonS3Exception ex)
+            var restClient = new RestClient(publicIpAddress);
+
+            // Upload the image
+            var postImageResponse = await restClient.PostImageAsync(filePath);
+
+            // Download the image
+            var response = await restClient.GetImageAsync(postImageResponse.Id);
+
+            Assert.That(response.IsSuccessStatusCode, Is.True, "The image was not downloaded successfully.");
+
+            // Ensure the directory exists
+            Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
+
+            // Save the downloaded image
+            await using (var fileStream = File.Create(downloadPath))
             {
-                Assert.Fail($"Failed to download images from the S3 bucket: {ex.Message}");
+                await response.Content.CopyToAsync(fileStream);
             }
+
+            // Assert that file was downloaded
+            Assert.That(File.Exists(downloadPath), Is.True, "The image was not downloaded successfully.");
+
+            // Delete the image
+            await restClient.DeleteImageAsync(postImageResponse.Id);
         }
 
-        [Test(Description = "CXQA-S3-05: View a list of uploaded images"), Order(11)]
+        [Test(Description = "CXQA-S3-05: View a list of uploaded images")]
         public async Task TestViewListOfUploadedImagesS3Bucket()
         {
-            try
-            {
-                string bucketName = await S3Helper.GetS3BucketName(S3Client);
-                await S3Helper.ViewListOfUploadedImagesS3Bucket(S3Client, bucketName);
-            }
-            catch (AmazonS3Exception ex)
-            {
-                Assert.Fail($"Failed to get list of uploaded images from the S3 bucket: {ex.Message}");
-            }
+            var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
+            var publicInstance = EC2Helper.GetPublicInstance(instances);
+            string publicIpAddress = publicInstance.PublicIpAddress;
+
+            var restClient = new RestClient(publicIpAddress);
+
+            // Upload the image
+            var postImageResponse = await restClient.PostImageAsync(filePath);
+
+            var getImagesResponse = await restClient.GetImagesAsync();
+
+            // Assert the response
+            Assert.That(getImagesResponse.Count, Is.GreaterThan(0), "No images were found. Expected count: > 0. Actual count: 0");
+            Assert.That(getImagesResponse.Any(i => i.Id == postImageResponse.Id), Is.True, $"No all images retrieved. It is expected images list contains at least one image with {postImageResponse.Id} id");
+
+            // Delete the image
+            await restClient.DeleteImageAsync(postImageResponse.Id);
         }
 
-        [Test(Description = "CXQA-S3-06: Delete an image from the S3 bucket"), Order(12)]
+        [Test(Description = "CXQA-S3-06: Delete an image from the S3 bucket")]
         public async Task TestDeleteImageFromS3Bucket()
         {
-            try
-            {
-                string bucketName = await S3Helper.GetS3BucketName(S3Client);
-                string key = "image.jpg";
+            var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
+            var publicInstance = EC2Helper.GetPublicInstance(instances);
+            string publicIpAddress = publicInstance.PublicIpAddress;
 
-                await S3Helper.DeleteImageFromS3Bucket(S3Client, bucketName, key);
-            }
-            catch (AmazonS3Exception ex)
-            {
-                Assert.Fail($"Failed to delete image from the S3 bucket: {ex.Message}");
-            }
+            var restClient = new RestClient(publicIpAddress);
+
+            // Upload the image
+            var postImageResponse = await restClient.PostImageAsync(filePath);
+
+            // Get image response
+            var getImageResponse = await restClient.GetImageMetadataAsync(postImageResponse.Id);
+
+            Assert.That(getImageResponse.Id, Is.EqualTo(postImageResponse.Id), "Image was not posted, the ids are different");
+
+            // Delete the image
+            await restClient.DeleteImageAsync(postImageResponse.Id);
+
+            // Get deleted image response
+            var getDeletedImageResponse = await restClient.GetImageAsync(postImageResponse.Id);
+
+            Assert.That(getDeletedImageResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound), "The image was not deleted successfully.");
         }
     }
 }
