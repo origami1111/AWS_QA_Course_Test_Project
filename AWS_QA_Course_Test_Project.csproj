@@ -13,6 +13,7 @@
     <PackageReference Include="Amazon.CDK.AWS.IAM" Version="1.204.0" />
     <PackageReference Include="AWSSDK.EC2" Version="3.7.430.7" />
     <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.404.11" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.415.10" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.2" />
