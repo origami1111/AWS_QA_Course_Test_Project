@@ -13,11 +13,14 @@
     <PackageReference Include="Amazon.CDK.AWS.IAM" Version="1.204.0" />
     <PackageReference Include="AWSSDK.EC2" Version="3.7.430.7" />
     <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.404.11" />
+    <PackageReference Include="AWSSDK.RDS" Version="3.7.410.52" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.415.10" />
+    <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.400.114" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="MySql.Data" Version="9.2.0" />
     <PackageReference Include="NUnit" Version="4.3.2" />
     <PackageReference Include="NUnit.Analyzers" Version="4.6.0">
       <PrivateAssets>all</PrivateAssets>
@@ -26,6 +29,7 @@
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.19.2" />
     <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
     <PackageReference Include="ReportUnit" Version="1.2.1" />
+    <PackageReference Include="SSH.NET" Version="2024.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,6 +38,9 @@
 
   <ItemGroup>
     <None Update="Config\appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\ssh_key_for_db.pem">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
