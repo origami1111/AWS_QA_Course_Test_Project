@@ -71,5 +71,15 @@ namespace AWS_QA_Course_Test_Project.Utils
             var describeSecurityGroupsResponse = await ec2Client.DescribeSecurityGroupsAsync(describeSecurityGroupsRequest);
             return describeSecurityGroupsResponse.SecurityGroups.FirstOrDefault();
         }
+
+        public static async Task<List<SecurityGroup>> DescribeSecurityGroupsAsync(AmazonEC2Client ec2Client, List<string> securityGroupIds)
+        {
+            var describeSecurityGroupsRequest = new DescribeSecurityGroupsRequest
+            {
+                GroupIds = securityGroupIds
+            };
+            var describeSecurityGroupsResponse = await ec2Client.DescribeSecurityGroupsAsync(describeSecurityGroupsRequest);
+            return describeSecurityGroupsResponse.SecurityGroups;
+        }
     }
 }
