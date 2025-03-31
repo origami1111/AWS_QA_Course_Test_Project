@@ -66,5 +66,24 @@ namespace AWS_QA_Course_Test_Project.Clients
             HttpResponseMessage response = await _httpClient.DeleteAsync($"image/{imageId}");
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task<HttpResponseMessage> PostNotificationAsync(string email)
+        {
+            return await _httpClient.PostAsync($"notification/{email}", null);
+        }
+
+        public async Task<List<SubscriptionResponseDTO>> GetNotificationsAsync()
+        {
+            HttpResponseMessage response = await _httpClient.GetAsync("notification");
+            response.EnsureSuccessStatusCode();
+
+            string responseData = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<SubscriptionResponseDTO>>(responseData);
+        }
+
+        public async Task<HttpResponseMessage> DeleteNotificationAsync(string email)
+        {
+            return await _httpClient.DeleteAsync($"notification/{email}");
+        }
     }
 }

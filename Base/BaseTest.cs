@@ -3,6 +3,8 @@ using Amazon.EC2;
 using Microsoft.Extensions.Configuration;
 using Amazon.S3;
 using Amazon.RDS;
+using Amazon.SQS;
+using Amazon.SimpleNotificationService;
 
 namespace AWS_QA_Course_Test_Project.Base
 {
@@ -13,6 +15,8 @@ namespace AWS_QA_Course_Test_Project.Base
         protected AmazonEC2Client Ec2Client;
         protected AmazonS3Client S3Client;
         protected AmazonRDSClient RdsClient;
+        protected AmazonSQSClient SqsClient;
+        protected AmazonSimpleNotificationServiceClient SnsClient;
         protected string Region;
 
         [SetUp]
@@ -27,6 +31,8 @@ namespace AWS_QA_Course_Test_Project.Base
             Ec2Client = new AmazonEC2Client();
             S3Client = new AmazonS3Client();
             RdsClient = new AmazonRDSClient();
+            SqsClient = new AmazonSQSClient();
+            SnsClient = new AmazonSimpleNotificationServiceClient();
         }
 
         [TearDown]
@@ -36,6 +42,8 @@ namespace AWS_QA_Course_Test_Project.Base
             Ec2Client.Dispose();
             S3Client.Dispose();
             RdsClient.Dispose();
+            SqsClient.Dispose();
+            SnsClient.Dispose();
         }
     }
 }
