@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace AWS_QA_Course_Test_Project.Utils
+namespace AWS_QA_Course_Test_Project.DTOs
 {
-    public class ApiResponse
+    public class ApiResponseDTO
     {
         [JsonProperty("availability_zone")]
         public string AvailabilityZone { get; set; }

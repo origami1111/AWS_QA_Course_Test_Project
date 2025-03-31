@@ -11,8 +11,12 @@
 
   <ItemGroup>
     <PackageReference Include="Amazon.CDK.AWS.IAM" Version="1.204.0" />
+    <PackageReference Include="AWSSDK.ApplicationAutoScaling" Version="3.7.402.66" />
+    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.7.410.11" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.406.9" />
     <PackageReference Include="AWSSDK.EC2" Version="3.7.430.7" />
     <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.404.11" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.412.6" />
     <PackageReference Include="AWSSDK.RDS" Version="3.7.410.52" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.415.10" />
     <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.400.114" />
@@ -43,6 +47,10 @@
     <None Update="Config\ssh_key_for_db.pem">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Tests\Module 7 - SNS, SQS\" />
   </ItemGroup>
 
 </Project>

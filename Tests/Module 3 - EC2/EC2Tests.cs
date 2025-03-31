@@ -1,5 +1,6 @@
 ﻿using Amazon.EC2.Model;
 using AWS_QA_Course_Test_Project.Base;
+using AWS_QA_Course_Test_Project.DTOs;
 using AWS_QA_Course_Test_Project.Utils;
 using Newtonsoft.Json;
 
@@ -97,7 +98,7 @@ namespace AWS_QA_Course_Test_Project.Tests
                     response.EnsureSuccessStatusCode();
 
                     string responseBody = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonConvert.DeserializeObject<ApiResponse>(responseBody);
+                    var apiResponse = JsonConvert.DeserializeObject<ApiResponseDTO>(responseBody);
 
                     Assert.That(apiResponse.AvailabilityZone, Is.EqualTo(expectedAvailabilityZone), "Availability zone does not match.");
                     Assert.That(apiResponse.PrivateIpv4, Is.EqualTo(expectedPrivateIpv4), "Private IPv4 does not match.");
