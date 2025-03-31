@@ -3,6 +3,8 @@ using Amazon.EC2;
 using Microsoft.Extensions.Configuration;
 using Amazon.S3;
 using Amazon.RDS;
+using Amazon.SQS;
+using Amazon.SimpleNotificationService;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda;
 using Amazon.CloudWatchLogs;
@@ -16,6 +18,8 @@ namespace AWS_QA_Course_Test_Project.Base
         protected AmazonEC2Client Ec2Client;
         protected AmazonS3Client S3Client;
         protected AmazonRDSClient RdsClient;
+        protected AmazonSQSClient SqsClient;
+        protected AmazonSimpleNotificationServiceClient SnsClient;
         protected AmazonDynamoDBClient DynamoDbClient;
         protected AmazonLambdaClient LambdaClient;
         protected AmazonCloudWatchLogsClient CloudWatchLogsClient;
@@ -33,6 +37,8 @@ namespace AWS_QA_Course_Test_Project.Base
             Ec2Client = new AmazonEC2Client();
             S3Client = new AmazonS3Client();
             RdsClient = new AmazonRDSClient();
+            SqsClient = new AmazonSQSClient();
+            SnsClient = new AmazonSimpleNotificationServiceClient();
             DynamoDbClient = new AmazonDynamoDBClient();
             LambdaClient = new AmazonLambdaClient();
             CloudWatchLogsClient = new AmazonCloudWatchLogsClient();
@@ -45,6 +51,8 @@ namespace AWS_QA_Course_Test_Project.Base
             Ec2Client.Dispose();
             S3Client.Dispose();
             RdsClient.Dispose();
+            SqsClient.Dispose();
+            SnsClient.Dispose();
             DynamoDbClient.Dispose();
             LambdaClient.Dispose();
             CloudWatchLogsClient.Dispose();

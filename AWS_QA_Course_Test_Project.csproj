@@ -20,7 +20,12 @@
     <PackageReference Include="AWSSDK.RDS" Version="3.7.410.52" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.415.10" />
     <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.400.114" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.400.115" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.400.116" />
+    <PackageReference Include="Consul" Version="1.7.14.7" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Google.Apis.Gmail.v1" Version="1.68.0.3427" />
+    <PackageReference Include="MailKit" Version="4.11.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
@@ -47,6 +52,10 @@
     <None Update="Config\ssh_key_for_db.pem">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DownloadedImage\" />
   </ItemGroup>
 
   <ItemGroup>
