@@ -58,8 +58,4 @@
     <Folder Include="DownloadedImage\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Tests\Module 7 - SNS, SQS\" />
-  </ItemGroup>
-
 </Project>

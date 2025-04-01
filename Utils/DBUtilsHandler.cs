@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using AWS_QA_Course_Test_Project.DTOs;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
