@@ -1,5 +1,6 @@
 ﻿using AWS_QA_Course_Test_Project.Base;
 using AWS_QA_Course_Test_Project.Clients;
+using AWS_QA_Course_Test_Project.DTOs;
 using AWS_QA_Course_Test_Project.Utils;
 
 namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
@@ -10,8 +11,8 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
         private const string ExpectedTableName = "cloudxserverless-DatabaseImagesTable";
         private const string FilePath = "C:\\Users\\origami\\Desktop\\CloudX Associate AWS for Testers\\AWS_QA_Course_Test_Project\\Images\\image0.jpg";
 
-        [Test(Description = "CXQA-RDS-03: Check that uploaded image metadata is stored in MySQL RDS database")]
-        public async Task TestImageMetadataIsStoredInDB()
+        [Test(Description = "CXQA-RDS-03: Check that uploaded image metadata is stored in DynamoDB database")]
+        public async Task TestImageMetadataIsStoredInDynamoDB()
         {
             var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
             var publicInstance = EC2Helper.GetPublicInstance(instances);
@@ -56,8 +57,8 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
             await restClient.DeleteImageAsync(postImageResponse.Id);
         }
 
-        [Test(Description = "CXQA-RDS-05: The image metadata for the deleted image is also deleted from the database")]
-        public async Task TestImageMetadataIsDeletedFromDB()
+        [Test(Description = "CXQA-RDS-05: The image metadata for the deleted image is also deleted from the DynamoDB")]
+        public async Task TestImageMetadataIsDeletedFromDynamoDB()
         {
             var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
             var publicInstance = EC2Helper.GetPublicInstance(instances);
@@ -80,6 +81,64 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
 
             var imageDataFromDynamoDBAfterDeleting = await DynamoDBHelper.GetItemFromDynamoDBById(DynamoDbClient, tableName, postImageResponse.Id);
             Assert.That(imageDataFromDynamoDBAfterDeleting, Is.Null, "The item with the specified id still exists in the DynamoDB table");
+        }
+
+        // Additional test cases
+        [Test(Description = "The list of image metadata is returned by http://{INSTANCE PUBLIC IP}/api/image GET request")]
+        public async Task TestListOfImagesMetadataIsReturnedByGetRequest()
+        {
+            var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
+            var publicInstance = EC2Helper.GetPublicInstance(instances);
+            string publicIpAddress = publicInstance.PublicIpAddress;
+            var restClient = new RestClient(publicIpAddress);
+
+            int imageCount = 10;
+            List<PostImageResponseDTO> postImageResponses = new List<PostImageResponseDTO>();
+            for (int i = 0; i < imageCount; i++)
+            {
+                postImageResponses.Add(await restClient.PostImageAsync(FilePath));
+            }
+
+            Assert.That(postImageResponses, Is.Not.Null, "Images was not uploaded");
+            Assert.That(postImageResponses.Count, Is.EqualTo(imageCount), "The number of uploaded images does not match the expected value");
+
+            var getImagesResponse = await restClient.GetImagesAsync();
+
+            Assert.That(getImagesResponse, Is.Not.Null, "List of images metadata not returned by GET request");
+            Assert.That(getImagesResponse.Count, Is.EqualTo(imageCount), "The number of images metadata returned does not match the expected value");
+
+            for (int i = 0; i < imageCount; i++)
+            {
+                await restClient.DeleteImageAsync(postImageResponses[i].Id);
+            }
+        }
+
+        [Test(Description = "Download image by http://{INSTANCE PUBLIC IP}/api/image/file/{image id} GET request")]
+        public async Task TestDownloadImageByGetRequest()
+        {
+            var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
+            var publicInstance = EC2Helper.GetPublicInstance(instances);
+            string publicIpAddress = publicInstance.PublicIpAddress;
+            string downloadPath = "DownloadedImages/image.jpg";
+
+            var restClient = new RestClient(publicIpAddress);
+
+            var postImageResponse = await restClient.PostImageAsync(FilePath);
+
+            var response = await restClient.GetImageAsync(postImageResponse.Id);
+
+            Assert.That(response.IsSuccessStatusCode, Is.True, "The image was not downloaded successfully");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
+
+            await using (var fileStream = File.Create(downloadPath))
+            {
+                await response.Content.CopyToAsync(fileStream);
+            }
+
+            Assert.That(File.Exists(downloadPath), Is.True, "The image was not downloaded successfully");
+
+            await restClient.DeleteImageAsync(postImageResponse.Id);
         }
     }
 }

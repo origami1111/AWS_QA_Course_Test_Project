@@ -98,7 +98,7 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
 
             var lastMessage = await gmailClient.GetLastMessageAsync();
 
-            Assert.Multiple(() => 
+            Assert.Multiple(() =>
             {
                 Assert.That(lastMessage.Body, Does.Contain("event_type: upload"), "The notification does not contain the 'event_type: upload'.");
                 Assert.That(lastMessage.Body, Does.Contain($"object_key: {getImageResponse.ObjectKey}"), "The notification does not contain the image object key.");
