@@ -36,8 +36,8 @@ namespace AWS_QA_Course_Test_Project.Utils
             var listTagsForResourceResponse = await snsClient.ListTagsForResourceAsync(listTagsForResourceRequest);
             return listTagsForResourceResponse.Tags.ToDictionary(tag => tag.Key, tag => tag.Value);
         }
-        private const string EmailToSubscribe = "novembertanks@gmail.com";
 
+        private const string EmailToSubscribe = "novembertanks@gmail.com";
 
         public static async Task ConfirmUserSubscriptionAsync(AmazonSimpleNotificationServiceClient snsClient, string token, string topicArn)
         {

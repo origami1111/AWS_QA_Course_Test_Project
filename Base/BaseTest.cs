@@ -24,6 +24,7 @@ namespace AWS_QA_Course_Test_Project.Base
         protected AmazonLambdaClient LambdaClient;
         protected AmazonCloudWatchLogsClient CloudWatchLogsClient;
         protected string Region;
+        protected string AccountId;
 
         [SetUp]
         public void Setup()
@@ -33,6 +34,8 @@ namespace AWS_QA_Course_Test_Project.Base
                 .Build();
 
             Region = config["AWS:Region"];
+            AccountId = config["AWS:AccountId"];
+
             IamClient = new AmazonIdentityManagementServiceClient();
             Ec2Client = new AmazonEC2Client();
             S3Client = new AmazonS3Client();
