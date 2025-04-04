@@ -61,10 +61,10 @@ namespace AWS_QA_Course_Test_Project.Utils
             }
         }
 
-        public static async Task<string> GetS3BucketName(AmazonS3Client s3Client)
+        public static async Task<string> GetS3BucketName(AmazonS3Client s3Client, string bucketNamePrefix)
         {
             var listBucketsResponse = await s3Client.ListBucketsAsync();
-            var bucket = listBucketsResponse.Buckets.FirstOrDefault(b => b.BucketName.Contains("cloudximage-imagestorebucket"));
+            var bucket = listBucketsResponse.Buckets.FirstOrDefault(b => b.BucketName.Contains(bucketNamePrefix));
 
             Assert.That(bucket, Is.Not.Null, "No S3 bucket found.");
 

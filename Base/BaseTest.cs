@@ -5,6 +5,9 @@ using Amazon.S3;
 using Amazon.RDS;
 using Amazon.SQS;
 using Amazon.SimpleNotificationService;
+using Amazon.DynamoDBv2;
+using Amazon.Lambda;
+using Amazon.CloudWatchLogs;
 
 namespace AWS_QA_Course_Test_Project.Base
 {
@@ -17,6 +20,9 @@ namespace AWS_QA_Course_Test_Project.Base
         protected AmazonRDSClient RdsClient;
         protected AmazonSQSClient SqsClient;
         protected AmazonSimpleNotificationServiceClient SnsClient;
+        protected AmazonDynamoDBClient DynamoDbClient;
+        protected AmazonLambdaClient LambdaClient;
+        protected AmazonCloudWatchLogsClient CloudWatchLogsClient;
         protected string Region;
 
         [SetUp]
@@ -33,6 +39,9 @@ namespace AWS_QA_Course_Test_Project.Base
             RdsClient = new AmazonRDSClient();
             SqsClient = new AmazonSQSClient();
             SnsClient = new AmazonSimpleNotificationServiceClient();
+            DynamoDbClient = new AmazonDynamoDBClient();
+            LambdaClient = new AmazonLambdaClient();
+            CloudWatchLogsClient = new AmazonCloudWatchLogsClient();
         }
 
         [TearDown]
@@ -44,6 +53,9 @@ namespace AWS_QA_Course_Test_Project.Base
             RdsClient.Dispose();
             SqsClient.Dispose();
             SnsClient.Dispose();
+            DynamoDbClient.Dispose();
+            LambdaClient.Dispose();
+            CloudWatchLogsClient.Dispose();
         }
     }
 }

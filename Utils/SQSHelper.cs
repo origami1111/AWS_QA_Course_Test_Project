@@ -33,5 +33,31 @@ namespace AWS_QA_Course_Test_Project.Utils
             var listQueueTagsResponse = await sqsClient.ListQueueTagsAsync(listQueueTagsRequest);
             return listQueueTagsResponse.Tags;
         }
+
+        public static async Task<string> GetSqsQueueNameAsync(AmazonSQSClient sqsClient, string queueNamePrefix)
+        {
+            var request = new ListQueuesRequest
+            {
+                QueueNamePrefix = queueNamePrefix
+            };
+            var response = await sqsClient.ListQueuesAsync(request);
+
+            foreach (var queueUrl in response.QueueUrls)
+            {
+                var queueName = queueUrl.Split('/').Last();
+                if (queueName.StartsWith(queueNamePrefix))
+                {
+                    return queueName;
+                }
+            }
+
+            return null;
+        }
+
+        public static async Task<string> GetQueueArnAsync(AmazonSQSClient sqsClient, string queueUrl)
+        {
+            var attributes = await sqsClient.GetQueueAttributesAsync(queueUrl, new List<string> { "QueueArn" });
+            return attributes.QueueARN;
+        }
     }
 }

@@ -11,9 +11,18 @@
 *.sln.docstates
 
 # Project-specific files
+client_secret.json
+ssh_key_for_db.pem
 appsettings.json
 TestResult.xml
 test_result.trx
+
+# 
+TemplateEngineHost\vs
+.vstemplates.global.etag
+.vstemplates.local
+.vstemplates.local.etag
+templatecache.json
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
