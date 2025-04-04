@@ -1,6 +1,7 @@
 ﻿using AWS_QA_Course_Test_Project.Base;
 using AWS_QA_Course_Test_Project.Clients;
 using AWS_QA_Course_Test_Project.Utils;
+using System.Net;
 
 namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
 {
@@ -9,9 +10,12 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
     {
         private const string ExpectedTableName = "cloudxserverless-DatabaseImagesTable";
         private const string FunctionNamePrefix = "cloudxserverless-EventHandlerLambda";
+        private const string QueueNamePrefix = "cloudxserverless-QueueSQSQueue";
+        private const string LogGroupNamePrefix = "/aws/lambda/cloudxserverless-EventHandlerLambda";
+        private const string TopicNamePrefix = "cloudxserverless-TopicSNSTopic";
+        private const string EmailToSubscribe = "novembertanks@gmail.com";
 
-        private const string filePath = "C:\\Users\\origami\\Desktop\\CloudX Associate AWS for Testers\\AWS_QA_Course_Test_Project\\Images\\image0.jpg";
-        private const string imageName = "image0.jpg";
+        private const string FilePath = "C:\\Users\\origami\\Desktop\\CloudX Associate AWS for Testers\\AWS_QA_Course_Test_Project\\Images\\image0.jpg";
 
         // CXQA-SLESS-01: The application database is replaced with a DynamoDB table.
         [Test(Description = "CXQA-SLESS-01: DynamoDB Table requirements: Name: cloudxserverless-DatabaseImagesTable{unique id}")]
@@ -82,7 +86,6 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
             Assert.That(hasCorrectTag, Is.True, $"DynamoDB does not have the correct tag. Expected: {expectedTagKey}: {expectedTagValue}");
         }
 
-        // CXQA-SLESS-02: The DynamoDB table should store the following image metadata information
         [Test(Description = "CXQA-SLESS-02: DynamoDB Table should store image metadata information: object creation-time, object last modification date-time, object key, object size, object type")]
         public async Task TestDynamoDBTableStoreImageMetadataInformation()
         {
@@ -92,7 +95,7 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
             string tableName = await DynamoDBHelper.GetDynamoDBTableNameAsync(DynamoDbClient, ExpectedTableName);
 
             var restClient = new RestClient(publicIpAddress);
-            var postImageResponse = await restClient.PostImageAsync(filePath);
+            var postImageResponse = await restClient.PostImageAsync(FilePath);
             var getImageResponse = await restClient.GetImageMetadataAsync(postImageResponse.Id);
 
             var imageDataFromDynamoDB = await DynamoDBHelper.GetItemFromDynamoDBById(DynamoDbClient, tableName, postImageResponse.Id);
@@ -112,56 +115,155 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
         }
 
         // CXQA-SLESS-03: The SNS topic is used to subscribe, unsubscribe users, list existing subscriptions, and send messages to subscribers about upload and delete image events
-        [Test]
-        public void DoWeNeedToCreateThisTest()
+        [Test(Description = "CXQA-SLESS-03: The SNS topic is used to subscribe, unsubscribe users, list existing subscriptions, and send messages to subscribers about upload and delete image events")]
+        public async Task TestSNSTopicIsUsedToSubscribeUnsubscribeUsersListExistingSubscriptionsSendMessagesAboutUploadAndDeleteImageEvents()
         {
-            // ????????????????
+            var gmailClient = new GmailClient(EmailToSubscribe);
+
+            var instances = await EC2Helper.DescribeInstancesAsync(Ec2Client);
+            var publicInstance = EC2Helper.GetPublicInstance(instances);
+            string publicIp = publicInstance.PublicIpAddress;
+            var restClient = new RestClient(publicIp);
+
+            var topicArn = await SNSHelper.GetTopicArnAsync(SnsClient, TopicNamePrefix);
+            Assert.That(topicArn, Is.Not.Null, "SNS topic with the expected name pattern not found.");
+
+            await SNSHelper.SubscribeUserWithConfirmationAsync(SnsClient, publicIp, gmailClient, topicArn);
+
+            // Verify the subscription
+            var actualSubscriptions = await restClient.GetNotificationsAsync();
+            Assert.That(actualSubscriptions.Any(sub => sub.Endpoint == EmailToSubscribe), Is.True, $"User {EmailToSubscribe} isn't subscribed to the topic");
+
+            // list existing subscriptions
+            var subscribersResponseAfterSubscriptions = await restClient.GetNotificationsAsync();
+            Assert.That(subscribersResponseAfterSubscriptions.Count, Is.EqualTo(1), $"Subscribers count isn't expected. Expected: 1. Actual: {subscribersResponseAfterSubscriptions.Count}");
+
+            // upload image event
+            var gmailMessagesBeforeUploadingImage = await gmailClient.GetMessagesAsync();
+            var postImageResponse = await restClient.PostImageAsync(FilePath);
+            await Task.Delay(5000);
+            var gmailMessagesAfterUploadingImage = await gmailClient.GetMessagesAsync();
+            Assert.That(gmailMessagesAfterUploadingImage.Count, Is.EqualTo(gmailMessagesBeforeUploadingImage.Count + 1), "The user did not receive a notification about the uploaded image, or received duplication.");
+
+            // delete image event
+            var gmailMessagesBeforeDeletingImage = await gmailClient.GetMessagesAsync();
+            await restClient.DeleteImageAsync(postImageResponse.Id);
+            await Task.Delay(3000);
+            var gmailMessagesAfterDeletingImage = await gmailClient.GetMessagesAsync();
+            Assert.That(gmailMessagesAfterDeletingImage.Count, Is.EqualTo(gmailMessagesBeforeDeletingImage.Count + 1), "The user did not receive a notification about the uploaded image, or received duplicates");
+
+            // Unsubscribe the user
+            var unsubscribedResponse = await restClient.DeleteNotificationAsync(EmailToSubscribe);
+            Assert.That(unsubscribedResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK), "Failed to unsubscribe the user");
+
+            await Task.Delay(5000);
+
+            // Verify the unsubscription
+            var actualSubscriptionsAfterUnsubscription = await restClient.GetNotificationsAsync();
+            Assert.That(actualSubscriptionsAfterUnsubscription.Any(sub => sub.Endpoint == EmailToSubscribe), Is.False, $"User {EmailToSubscribe} is still subscribed to the topic but shouldn't be");
         }
 
-        // CXQA-SLESS-04: The application uses an SQS queue to publish event messages
-        [Test]
-        public void DoWeNeedToCreateThisTest2()
+        [Test(Description = "CXQA-SLESS-04: The application uses an SQS queue to publish event messages")]
+        public async Task TestApplicationUsesSQSQueueToPublishMessages()
         {
-            // ????????????????
+            string message = "Test message";
+            string queueUrl = await SQSHelper.GetQueueUrlAsync(SqsClient, QueueNamePrefix);
+            Assert.That(queueUrl, Is.Not.Null, "The SQS queue with the specified prefix does not exist");
+
+            var queueAttributes = await SQSHelper.GetQueueAttributesAsync(SqsClient, queueUrl, new List<string> { "All" });
+            Assert.That(queueAttributes, Is.Not.Null, "Failed to get SQS queue attributes");
+
+            var response = await SqsClient.SendMessageAsync(queueUrl, message);
+            Assert.That(response.HttpStatusCode, Is.EqualTo(HttpStatusCode.OK), "Message were nor published to the SQS queue");
         }
 
-        // CXQA-SLESS-05: A lambda function is subscribed to the SQS queue to filter and put event messages to the SNS topic
         [Test(Description = "CXQA-SLESS-05: A lambda function is subscribed to the SQS queue to filter and put event messages to the SNS topic")]
-        public void TestLambdaFunctionSubscribedToSQSQueue()
+        public async Task TestLambdaFunctionSubscribedToSQSQueue()
         {
+            string functionName = await LambdaHelper.GetLambdaFunctionNameAsync(LambdaClient, FunctionNamePrefix);
+            Assert.That(functionName, Is.Not.Null, "The Lambda function with the specified prefix does not exist");
+
+            string queueUrl = await SQSHelper.GetQueueUrlAsync(SqsClient, QueueNamePrefix);
+            Assert.That(queueUrl, Is.Not.Null, "The SQS queue with the specified prefix does not exist");
+
+            var eventSourceMappings = await LambdaHelper.GetEventSourceMappingsAsync(LambdaClient, functionName);
+            Assert.That(eventSourceMappings, Is.Not.Null.And.Not.Empty, "The Lambda function has no event source mappings");
+
+            var queueArn = await SQSHelper.GetQueueArnAsync(SqsClient, queueUrl);
+            var hasSqsTrigger = eventSourceMappings.Any(mapping => mapping.EventSourceArn == queueArn);
+            Assert.That(hasSqsTrigger, Is.True, $"The Lambda function is not triggered by the expected SQS queue. Expected: {queueArn}");
         }
 
-        // CXQA-SLESS-06: The application should have access to the S3 bucket, the DynamoDB table, the SQS queue and the SNS topic instance via IAM roles
         [Test(Description = "CXQA-SLESS-06: The application should have access to the S3 bucket via IAM roles")]
-        public void TestApplicationAccessToS3BucketViaIAMRoles()
+        public async Task TestApplicationAccessToS3BucketViaIAMRoles()
         {
+            var bucketName = await S3Helper.GetS3BucketName(S3Client, "cloudxserverless-imagestorebucket");
+            Assert.That(bucketName, Is.Not.Null, "S3 bucket with the expected name pattern not found.");
+            await S3Helper.AssertS3BucketAccess(S3Client, bucketName);
         }
 
         [Test(Description = "CXQA-SLESS-06: The application should have access to the DynamoDB table via IAM roles")]
-        public void TestApplicationAccessToDynamoDBTableViaIAMRoles()
+        public async Task TestApplicationAccessToDynamoDBTableViaIAMRoles()
         {
+            string tableName = await DynamoDBHelper.GetDynamoDBTableNameAsync(DynamoDbClient, ExpectedTableName);
+            Assert.That(tableName, Is.Not.Null, "DynamoDB table with the expected name pattern not found.");
+
+            try
+            {
+                var tableAttributes = await DynamoDBHelper.GetTableAttributesAsync(DynamoDbClient, tableName);
+                Assert.That(tableAttributes, Is.Not.Null, "Failed to get DynamoDB table attributes.");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Failed to access DynamoDB table: {ex.Message}");
+            }
         }
 
         [Test(Description = "CXQA-SLESS-06: The application should have access to the SQS queue via IAM roles")]
-        public void TestApplicationAccessToSQSQueueViaIAMRoles()
+        public async Task TestApplicationAccessToSQSQueueViaIAMRoles()
         {
+            var queueUrl = await SQSHelper.GetQueueUrlAsync(SqsClient, "cloudxserverless-QueueSQSQueue");
+            Assert.That(queueUrl, Is.Not.Null, "SQS queue with the expected name pattern not found.");
+
+            try
+            {
+                var attributes = await SQSHelper.GetQueueAttributesAsync(SqsClient, queueUrl, new List<string> { "All" });
+                Assert.That(attributes, Is.Not.Null, "Failed to get SQS queue attributes.");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Failed to access SQS queue: {ex.Message}");
+            }
         }
 
         [Test(Description = "CXQA-SLESS-06: The application should have access to the SNS topic instance via IAM roles")]
-        public void TestApplicationAccessToSNSTopicInstanceViaIAMRoles()
+        public async Task TestApplicationAccessToSNSTopicInstanceViaIAMRoles()
         {
+            var topicArn = await SNSHelper.GetTopicArnAsync(SnsClient, "cloudxserverless-TopicSNSTopic");
+            Assert.That(topicArn, Is.Not.Null, "SNS topic with the expected name pattern not found.");
+
+            try
+            {
+                var attributes = await SNSHelper.GetTopicAttributesAsync(SnsClient, topicArn);
+                Assert.That(attributes, Is.Not.Null, "Failed to get SNS topic attributes.");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Failed to access SNS topic: {ex.Message}");
+            }
         }
 
         // CXQA-SLESS-07: AWS Lambda requirements
         [Test(Description = "CXQA-SLESS-07: AWS Lambda requirements: Lambda Trigger: SQS Queue")]
-        public async Task TestLambdaTriggerSQSQueue() // Redo it after merge
+        public async Task TestLambdaTriggerSQSQueue()
         {
-            string sqsQueueNamePrefix = "cloudxserverless-QueueSQSQueue";
-            string expectedQueueArn = "arn:aws:sqs:eu-central-1:396913717218:your-queue-name"; // Replace with your SQS queue ARN
-
             string functionName = await LambdaHelper.GetLambdaFunctionNameAsync(LambdaClient, FunctionNamePrefix);
-            Assert.That(functionName, Is.Not.Null, "The Lambda function with the specified prefix does not exist");
+            string queueName = await SQSHelper.GetSqsQueueNameAsync(SqsClient, QueueNamePrefix);
 
+            Assert.That(functionName, Is.Not.Null, "The Lambda function with the specified prefix does not exist");
+            Assert.That(queueName, Is.Not.Null, "The SQS queue with the specified prefix does not exist");
+
+            string expectedQueueArn = $"arn:aws:sqs:eu-central-1:396913717218:{queueName}";
             var eventSourceMappings = await LambdaHelper.GetEventSourceMappingsAsync(LambdaClient, functionName);
             Assert.That(eventSourceMappings, Is.Not.Null.And.Not.Empty, "The Lambda function has no event source mappings");
 
@@ -172,11 +274,10 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
         [Test(Description = "CXQA-SLESS-07: AWS Lambda requirements: Lambda application logs are stored in CloudWatch log group (aws/lambda/cloudxserverless-EventHandlerLambda{unique id})")]
         public async Task TestLambdaApplicationLogsStoredInCloudWatchLogGroup()
         {
-            string logGroupNamePrefix = "/aws/lambda/cloudxserverless-EventHandlerLambda";
             string functionName = await LambdaHelper.GetLambdaFunctionNameAsync(LambdaClient, FunctionNamePrefix);
             Assert.That(functionName, Is.Not.Null, "The Lambda function with the specified prefix does not exist");
 
-            string logGroupName = $"{logGroupNamePrefix}{functionName.Substring(FunctionNamePrefix.Length)}";
+            string logGroupName = $"{LogGroupNamePrefix}{functionName.Substring(FunctionNamePrefix.Length)}";
             bool logGroupExists = await CloudWatchLogsHelper.IsLogGroupExistsAsync(CloudWatchLogsClient, logGroupName);
             Assert.That(logGroupExists, Is.True, $"The CloudWatch log group does not exist. Expected: {logGroupName}");
         }

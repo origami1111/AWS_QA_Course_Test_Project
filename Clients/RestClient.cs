@@ -1,11 +1,6 @@
 ﻿using AWS_QA_Course_Test_Project.DTOs;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AWS_QA_Course_Test_Project.Clients
 {
@@ -39,10 +34,19 @@ namespace AWS_QA_Course_Test_Project.Clients
         public async Task<ImageResponseDTO> GetImageMetadataAsync(string imageId)
         {
             HttpResponseMessage response = await _httpClient.GetAsync($"image/{imageId}");
-            response.EnsureSuccessStatusCode();
-
             string responseData = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<ImageResponseDTO>(responseData);
+
+            ImageResponseDTO imageResponse;
+            try
+            {
+                imageResponse = JsonConvert.DeserializeObject<ImageResponseDTO>(responseData);
+            }
+            catch (Exception)
+            {
+                imageResponse = null;
+            }
+
+            return imageResponse;
         }
 
         public async Task<PostImageResponseDTO> PostImageAsync(string filePath)

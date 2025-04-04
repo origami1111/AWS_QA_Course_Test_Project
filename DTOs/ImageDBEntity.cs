@@ -1,5 +1,4 @@
-﻿
-namespace AWS_QA_Course_Test_Project.Utils
+﻿namespace AWS_QA_Course_Test_Project.DTOs
 {
     public class ImageDBEntity
     {

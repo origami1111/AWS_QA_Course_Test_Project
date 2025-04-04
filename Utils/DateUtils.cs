@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
 namespace AWS_QA_Course_Test_Project.Utils
 {
@@ -19,6 +14,13 @@ namespace AWS_QA_Course_Test_Project.Utils
         {
             DateTime parsedDate = DateTime.Parse(date, null, DateTimeStyles.AdjustToUniversal);
             return parsedDate.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+
+        public static string ParseNumericDateFormatT(double numericDate)
+        {
+            long unixTimestamp = Convert.ToInt64(numericDate);
+            DateTimeOffset dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
+            return dateTime.ToString("yyyy-MM-dd HH:mm:sszzz");
         }
     }
 }

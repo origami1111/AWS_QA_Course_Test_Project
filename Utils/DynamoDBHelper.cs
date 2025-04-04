@@ -114,15 +114,26 @@ namespace AWS_QA_Course_Test_Project.Utils
             var response = await dynamoDbClient.GetItemAsync(request);
             var item = response.Item;
 
-            return new ImageResponseDTO
+            ImageResponseDTO imageResponse;
+
+            if (item.Count == 0)
             {
-                Id = item["id"].S,
-                CreatedAt = double.Parse(item["created_at"].N),
-                LastModified = double.Parse(item["last_modified"].N),
-                ObjectKey = item["object_key"].S,
-                ObjectSize = double.Parse(item["object_size"].N),
-                ObjectType = item["object_type"].S
-            };
+                imageResponse = null;
+            }
+            else
+            {
+                imageResponse = new ImageResponseDTO
+                {
+                    Id = item["id"].S,
+                    CreatedAt = double.Parse(item["created_at"].N),
+                    LastModified = double.Parse(item["last_modified"].N),
+                    ObjectKey = item["object_key"].S,
+                    ObjectSize = double.Parse(item["object_size"].N),
+                    ObjectType = item["object_type"].S
+                };
+            }
+
+            return imageResponse;
         } 
 
         private static async Task<DescribeTableResponse> GetDescribeTableResponseAsync(AmazonDynamoDBClient dynamoDbClient, string tableName)

@@ -3,8 +3,6 @@ using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
-using MailKit.Net.Imap;
-using MailKit.Security;
 using System.Net.Mail;
 using System.Text;
 
@@ -20,7 +18,7 @@ namespace AWS_QA_Course_Test_Project.Clients
         {
             UserCredential credential;
 
-            using (var stream = new FileStream("C:\\Users\\origami\\Desktop\\CloudX Associate AWS for Testers\\AWS_QA_Course_Test_Project\\client_secret.json", FileMode.Open, FileAccess.Read))
+            using (var stream = new FileStream("C:\\Users\\origami\\Desktop\\CloudX Associate AWS for Testers\\AWS_QA_Course_Test_Project\\Config\\client_secret.json", FileMode.Open, FileAccess.Read))
             {
                 string credPath = "token.json";
                 credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
