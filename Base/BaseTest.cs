@@ -8,6 +8,8 @@ using Amazon.SimpleNotificationService;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda;
 using Amazon.CloudWatchLogs;
+using Amazon.CloudWatch;
+using Amazon.CloudTrail;
 
 namespace AWS_QA_Course_Test_Project.Base
 {
@@ -23,7 +25,11 @@ namespace AWS_QA_Course_Test_Project.Base
         protected AmazonDynamoDBClient DynamoDbClient;
         protected AmazonLambdaClient LambdaClient;
         protected AmazonCloudWatchLogsClient CloudWatchLogsClient;
+        protected AmazonCloudWatchClient CloudWatchClient;
+        protected AmazonCloudTrailClient CloudTrailClient;
+
         protected string Region;
+        protected string AccountId;
 
         [SetUp]
         public void Setup()
@@ -33,6 +39,8 @@ namespace AWS_QA_Course_Test_Project.Base
                 .Build();
 
             Region = config["AWS:Region"];
+            AccountId = config["AWS:AccountId"];
+
             IamClient = new AmazonIdentityManagementServiceClient();
             Ec2Client = new AmazonEC2Client();
             S3Client = new AmazonS3Client();
@@ -42,6 +50,8 @@ namespace AWS_QA_Course_Test_Project.Base
             DynamoDbClient = new AmazonDynamoDBClient();
             LambdaClient = new AmazonLambdaClient();
             CloudWatchLogsClient = new AmazonCloudWatchLogsClient();
+            CloudWatchClient = new AmazonCloudWatchClient();
+            CloudTrailClient = new AmazonCloudTrailClient();
         }
 
         [TearDown]
@@ -56,6 +66,8 @@ namespace AWS_QA_Course_Test_Project.Base
             DynamoDbClient.Dispose();
             LambdaClient.Dispose();
             CloudWatchLogsClient.Dispose();
+            CloudWatchClient.Dispose();
+            CloudTrailClient.Dispose();
         }
     }
 }

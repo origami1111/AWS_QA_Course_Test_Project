@@ -3,8 +3,6 @@ using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
-using MailKit.Net.Imap;
-using MailKit.Security;
 using System.Net.Mail;
 using System.Text;
 

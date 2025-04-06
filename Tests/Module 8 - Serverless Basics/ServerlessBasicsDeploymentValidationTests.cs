@@ -263,7 +263,7 @@ namespace AWS_QA_Course_Test_Project.Tests.Module_8___Serverless_Basics
             Assert.That(functionName, Is.Not.Null, "The Lambda function with the specified prefix does not exist");
             Assert.That(queueName, Is.Not.Null, "The SQS queue with the specified prefix does not exist");
 
-            string expectedQueueArn = $"arn:aws:sqs:eu-central-1:396913717218:{queueName}";
+            string expectedQueueArn = $"arn:aws:sqs:{Region}:{AccountId}:{queueName}";
             var eventSourceMappings = await LambdaHelper.GetEventSourceMappingsAsync(LambdaClient, functionName);
             Assert.That(eventSourceMappings, Is.Not.Null.And.Not.Empty, "The Lambda function has no event source mappings");
 
